@@ -1,3 +1,5 @@
+#import <Foundation/Foundation.h>
+
 @interface SBSApplicationShortcutSystemIcon: NSObject
 -(instancetype)initWithSystemImageName:(NSString*)name;
 @end

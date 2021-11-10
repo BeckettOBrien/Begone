@@ -1,5 +1,3 @@
-#import <Foundation/Foundation.h>
-
 @interface SBSApplicationShortcutSystemIcon: NSObject
 -(instancetype)initWithSystemImageName:(NSString*)name;
 @end
@@ -10,7 +8,7 @@
 -(void)setIcon:(SBSApplicationShortcutSystemIcon*)icon;
 @end
 
-@interface SBApplicationIcon: NSObject
+@interface SBIcon: NSObject
 @end
 
 @interface SBApplication: NSObject
@@ -18,7 +16,7 @@
 @end
 
 @interface SBIconView : NSObject
-@property (nonatomic) SBApplicationIcon* icon;
+@property (nonatomic,retain) SBIcon* icon;
 -(NSString*)applicationBundleIdentifier;
 -(NSString*)applicationBundleIdentifierForShortcuts;
 +(void)activateShortcut:(SBSApplicationShortcutItem*)item withBundleIdentifier:(id)bundleId forIconView:(SBIconView*)iconView;
@@ -27,12 +25,16 @@
 %hook SBIconView
 -(NSArray*)applicationShortcutItems {
 	NSArray* orig = %orig;
-	SBSApplicationShortcutItem* item = [[%c(SBSApplicationShortcutItem) alloc] init];
-	item.localizedTitle = @"Clear Notifications";
-	item.type = @"com.beckettobrien.begone.item";
-	[item setIcon:[[%c(SBSApplicationShortcutSystemIcon) alloc] initWithSystemImageName:@"clear"]];
-	return [orig arrayByAddingObject:item];
+	if ([self.icon isKindOfClass:[%c(SBApplicationIcon) class]]) {
+		SBSApplicationShortcutItem* item = [[%c(SBSApplicationShortcutItem) alloc] init];
+		item.localizedTitle = @"Clear Notifications";
+		item.type = @"com.beckettobrien.begone.item";
+		[item setIcon:[[%c(SBSApplicationShortcutSystemIcon) alloc] initWithSystemImageName:@"clear"]];
+		orig = [orig arrayByAddingObject:item];
+	}
+	return orig;
 }
+
 +(void)activateShortcut:(SBSApplicationShortcutItem*)item withBundleIdentifier:(id)bundleId forIconView:(SBIconView*)iconView {
 	if ([[item type] isEqualToString:@"com.beckettobrien.begone.item"]) {
 		[(SBApplication*)[[iconView icon] valueForKey:@"_application"] setBadgeValue:@0];
